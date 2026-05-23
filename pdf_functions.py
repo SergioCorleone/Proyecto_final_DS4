@@ -4,7 +4,12 @@ from markitdown import MarkItDown
 import requests
 from bs4 import BeautifulSoup
 import os
+import fitz  
+import pytesseract
+from PIL import Image
+import io
 
+pytesseract.pytesseract.tesseract_cmd = r'C:\Users\Gigabyte\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 class pdf_document:
     """ Class to represent a PDF document with its URL, pdf path and markdown path filename."""
     def __init__(self, url, pdf_path, markdown_path):
@@ -14,17 +19,51 @@ class pdf_document:
         self.content = None
         self.convert_pdf_to_markdown()
     def convert_pdf_to_markdown(self):
-        """ Converts a PDF file to Markdown format using MarkItDown."""
+        """ Converts a PDF file to Markdown format, with OCR fallback for scanned files."""
         try:
             converter = MarkItDown()
             result = converter.convert(self.pdf_path)
             markdown_content = result.markdown or result.text_content
-            with open(self.markdown_path, 'w', encoding='utf-8') as f:
-                f.write(markdown_content)
-            self.content = markdown_content
+
+    
+            if not markdown_content or len(markdown_content.strip()) < 50:
+                print(f"[{os.path.basename(self.pdf_path)}] Parece ser un PDF escaneado. Aplicando OCR...")
+                ocr_text = extract_text_with_ocr(self.pdf_path)
+                if ocr_text:
+                    markdown_content = ocr_text
+
+            if markdown_content:
+                with open(self.markdown_path, 'w', encoding='utf-8') as f:
+                    f.write(markdown_content)
+                self.content = markdown_content
+                
         except Exception as e:
             print(f"Error converting PDF to Markdown: {e}")
 
+def extract_text_with_ocr(pdf_path):
+    """ Convierte el PDF a imágenes y aplica OCR para extraer el texto. """
+    text_content = ""
+    try:
+        pdf_document = fitz.open(pdf_path)
+        
+        for page_num in range(len(pdf_document)):
+            page = pdf_document.load_page(page_num)
+            
+           
+            pix = page.get_pixmap(dpi=300) 
+            img = Image.open(io.BytesIO(pix.tobytes()))
+            
+           
+            text = pytesseract.image_to_string(img, lang='spa')
+            
+            text_content += f"\n\n### Página {page_num + 1}\n\n" + text
+            
+        pdf_document.close()
+        return text_content
+    except Exception as e:
+        print(f"Error durante el OCR en {pdf_path}: {e}")
+        return None
+    
 def get_webpage(url):
     """ Fetches the content of a webpage given its URL."""
     try:
