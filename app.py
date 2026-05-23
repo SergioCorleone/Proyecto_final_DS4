@@ -73,43 +73,71 @@ def run_scraper(url_id):
             
     return redirect(url_for('scrapper'))
 
+import Levenshtein # Asegúrate de tenerlo importado arriba en tu app.py
+
+import Levenshtein
+
 @app.route('/search')
 def search():
-    query = request.args.get('q', '').lower()
+    query = request.args.get('query', '').lower().strip()
+    
+    try:
+        threshold = float(request.args.get('threshold', 0.5))
+    except ValueError:
+        threshold = 0.5
+
     resultados = []
 
     if query and db["documents"]:
         words_per_chunk = 30
         
+        # 1. Contamos cuántas palabras tiene la búsqueda
+        query_words = query.split()
+        query_len = len(query_words)
+        # Limpiamos la búsqueda de comas o puntos para mayor precisión
+        query_limpia = "".join(c for c in query if c.isalnum() or c.isspace())
+        
         for doc in db["documents"]:
             if doc.content:
                 words = doc.content.split()
                 
-                # Create blocks of 30 words
+                # 2. Recorremos por bloques de 30 palabras para mostrar en pantalla
                 for i in range(0, len(words), words_per_chunk):
-                    bloque = " ".join(words[i:i+words_per_chunk])
+                    bloque_palabras = words[i:i+words_per_chunk]
+                    bloque_texto = " ".join(bloque_palabras)
                     
-                    # Find the highest Levenshtein ratio for any single word in this block
                     best_ratio = 0.0
-                    for word in words[i:i+words_per_chunk]:
-                        # Clean punctuation off the word for an accurate match
-                        clean_word = "".join(c for c in word if c.isalnum()).lower()
-                        if clean_word:
-                            import Levenshtein
-                            ratio = Levenshtein.ratio(clean_word, query)
+                    
+                    # 3. VENTANA DESLIZANTE:
+                    # Si el usuario busca 2 palabras, revisamos el bloque de 2 en 2 palabras.
+                    if query_len <= len(bloque_palabras):
+                        for j in range(len(bloque_palabras) - query_len + 1):
+                            # Extraemos una ventanita de palabras del mismo tamaño que la búsqueda
+                            ventana_palabras = bloque_palabras[j:j+query_len]
+                            ventana_texto = " ".join(ventana_palabras).lower()
+                            
+                            # Limpiamos la ventanita de comas o puntos
+                            ventana_limpia = "".join(c for c in ventana_texto if c.isalnum() or c.isspace())
+                            
+                            # Comparamos del mismo tamaño: ej. 2 palabras vs 2 palabras
+                            ratio = Levenshtein.ratio(query_limpia, ventana_limpia)
+                            
                             if ratio > best_ratio:
                                 best_ratio = ratio
+                    else:
+                        # Si la búsqueda es más grande que el bloque, comparamos todo directo
+                        best_ratio = Levenshtein.ratio(query_limpia, bloque_texto.lower())
                     
-                    # If the best matching word in the paragraph meets the threshold, save the whole block
-                    if best_ratio >= 0.5: # Adjusted to 0.5 as requested in your original Python file
-                        chunk_obj = TextChunk(bloque, doc.url)
+                    # 4. Si el mejor pedacito supera el slider, guardamos el bloque entero
+                    if best_ratio >= threshold:
+                        chunk_obj = TextChunk(bloque_texto, doc.url)
                         chunk_obj.ratio = best_ratio
                         resultados.append(chunk_obj)
 
-        # Sort results by highest ratio first
+        # Ordenar los resultados para mostrar el mayor porcentaje primero
         resultados.sort(key=lambda x: x.ratio, reverse=True)
 
-    return render_template('search.html', query=query, resultados=resultados)
+    return render_template('search.html', query=query, threshold=threshold, resultados=resultados)
 
 if __name__ == '__main__':
     app.run(debug=True)

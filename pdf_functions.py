@@ -9,7 +9,7 @@ import pytesseract
 from PIL import Image
 import io
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\Gigabyte\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Tesseract-OCR\tesseract.exe'
 class pdf_document:
     """ Class to represent a PDF document with its URL, pdf path and markdown path filename."""
     def __init__(self, url, pdf_path, markdown_path):

@@ -1,22 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
-<h3 class="mb-4">Resultados de búsqueda para: <span class="text-primary">"{{ query }}"</span></h3>
 
-{% if resultados %}
-    <div class="list-group">
-        {% for res in resultados %}
-            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border">
-                <div class="d-flex w-100 justify-content-between">
-                    <small class="text-muted text-truncate" style="max-width: 80%;">
-                        <strong>URL:</strong> <a href="{{ res.url_origen }}" target="_blank">{{ res.url_origen }}</a>
-                    </small>
-                    <span class="badge bg-success rounded-pill">Similitud: {{ "%.3f"|format(res.ratio) }}</span>
-                </div>
-                <p class="mb-1 mt-2 fst-italic">"...{{ res.frase }}..."</p>
+<!-- Formulario de Búsqueda y Slider -->
+<div class="card p-4 mb-4 shadow-sm bg-light">
+    <form action="{{ url_for('search') }}" method="GET">
+        <div class="row align-items-center">
+            
+            <!-- Campo de texto (name="query") -->
+            <div class="col-md-5 mb-3 mb-md-0">
+                <label for="query" class="form-label fw-bold">Texto a buscar:</label>
+                <input type="text" class="form-control" name="query" id="query" value="{{ query }}" required>
             </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="alert alert-warning">No se encontraron resultados que coincidan con la búsqueda.</div>
+            
+            <!-- Slider de Similitud (name="threshold") -->
+            <div class="col-md-5 mb-3 mb-md-0">
+                <label for="threshold" class="form-label fw-bold">
+                    Umbral de similitud: <span id="sliderValue" class="text-primary">{{ threshold if threshold else 0.5 }}</span>
+                </label>
+                <input type="range" class="form-range" name="threshold" id="threshold" 
+                       min="0" max="1" step="0.01" value="{{ threshold if threshold else 0.5 }}"
+                       oninput="document.getElementById('sliderValue').innerText = this.value">
+            </div>
+            
+            <div class="col-md-2 mt-md-4">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Sección de Resultados -->
+{% if query %}
+    <h3 class="mb-4">Resultados para: <span class="text-primary">"{{ query }}"</span></h3>
+
+    {% if resultados %}
+        <div class="list-group">
+            {% for res in resultados %}
+                <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <small class="text-muted text-truncate" style="max-width: 80%;">
+                            <strong>URL:</strong> <a href="{{ res.url_origen }}" target="_blank">{{ res.url_origen }}</a>
+                        </small>
+                        <span class="badge bg-success rounded-pill">
+                            Similitud: {{ "%.3f"|format(res.ratio * 100) }}%
+                        </span>
+                    </div>
+                    <p class="mb-1 mt-2 fst-italic">"...{{ res.frase }}..."</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">No se encontraron resultados. Intenta bajar el valor del slider.</div>
+    {% endif %}
 {% endif %}
+
 {% endblock %}
