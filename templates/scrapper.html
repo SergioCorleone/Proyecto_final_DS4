@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-info text-white">
+        <h4 class="mb-0">Gestión del Scrapper</h4>
+    </div>
+    <div class="card-body">
+        {% for url in urls %}
+            <div class="border rounded p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">{{ url.url }}</h5>
+                    <div>
+                        <span class="badge {% if url.status == 'Escrapeada' %}bg-success{% else %}bg-warning text-dark{% endif %} me-2">
+                            {{ url.status }}
+                        </span>
+                        <a href="/run_scraper/{{ url.id }}" class="btn btn-sm btn-outline-primary">Iniciar Escrapeo</a>
+                    </div>
+                </div>
+                
+                {% if url.files %}
+                    <h6 class="text-muted mt-3">Archivos escrapeados:</h6>
+                    <ul class="list-group list-group-sm">
+                        {% for file in url.files %}
+                            <li class="list-group-item py-1">{{ file }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="text-muted">No hay URLs configuradas. Ve a Configuración para agregar una.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

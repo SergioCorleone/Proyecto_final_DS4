@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Panel Principal del Sistema</h4>
+    </div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush fs-5">
+            <li class="list-group-item"><strong>Total de documentos indexados:</strong> {{ total_docs }}</li>
+            <li class="list-group-item"><strong>Total de palabras indexadas:</strong> {{ total_words }}</li>
+            <li class="list-group-item">
+                <strong>Total de documentos por año:</strong>
+                <ul>
+                    {% for year, count in docs_by_year.items() %}
+                        <li>{{ year }}: {{ count }} documentos</li>
+                    {% else %}
+                        <li>No hay datos indexados aún.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

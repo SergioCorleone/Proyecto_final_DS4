@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4 class="mb-0">Configuración de URLs</h4>
+    </div>
+    <div class="card-body">
+        <form action="/configuration" method="POST" class="d-flex mb-3">
+            <input type="url" class="form-control me-2" name="url_input" placeholder="https://ejemplo.com/pdfs" required>
+            <button type="submit" class="btn btn-primary">AGREGAR</button>
+        </form>
+
+        <h5>Direcciones Agregadas:</h5>
+        <ul class="list-group">
+            {% for url in urls %}
+                <li class="list-group-item">{{ url.url }}</li>
+            {% else %}
+                <li class="list-group-item text-muted">No hay URLs configuradas.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
