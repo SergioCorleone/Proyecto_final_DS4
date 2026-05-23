@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-4">Resultados de búsqueda para: <span class="text-primary">"{{ query }}"</span></h3>
+
+{% if resultados %}
+    <div class="list-group">
+        {% for res in resultados %}
+            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border">
+                <div class="d-flex w-100 justify-content-between">
+                    <small class="text-muted text-truncate" style="max-width: 80%;">
+                        <strong>URL:</strong> <a href="{{ res.url_origen }}" target="_blank">{{ res.url_origen }}</a>
+                    </small>
+                    <span class="badge bg-success rounded-pill">Similitud: {{ "%.3f"|format(res.ratio) }}</span>
+                </div>
+                <p class="mb-1 mt-2 fst-italic">"...{{ res.frase }}..."</p>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-warning">No se encontraron resultados que coincidan con la búsqueda.</div>
+{% endif %}
+{% endblock %}
